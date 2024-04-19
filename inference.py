@@ -71,7 +71,7 @@ def constructBayesNet(gameState: hunters.GameState):
         for y in range(Y_RANGE):
             
             positions.append((x,y)) # all possible position tuples 
-
+    
     for xy1 in positions:
         for xy2 in positions:
             
@@ -83,12 +83,13 @@ def constructBayesNet(gameState: hunters.GameState):
             
             if manMinusNoise not in manDistances:
                 manDistances.append(manMinusNoise)
-            
+    
     variableDomainsDict[GHOST0] = positions
-    variableDomainsDict[OBS0] = manDistances
     variableDomainsDict[PAC] = positions
-    variableDomainsDict[OBS1] = manDistances
     variableDomainsDict[GHOST1] = positions
+    
+    variableDomainsDict[OBS0] = manDistances
+    variableDomainsDict[OBS1] = manDistances
     "*** END YOUR CODE HERE ***"
 
     net = bn.constructEmptyBayesNet(variables, edges, variableDomainsDict)
@@ -469,10 +470,9 @@ class InferenceModule:
         Return the probability P(noisyDistance | pacmanPosition, ghostPosition).
         """
         "*** YOUR CODE HERE ***"
-        if noisyDistance == None and jailPosition == ghostPosition:
-            return 1.0
-        if (noisyDistance == None and jailPosition != ghostPosition) or (noisyDistance != None and jailPosition == ghostPosition):
-            return 0.0
+        if noisyDistance == None and jailPosition == ghostPosition: return 1.0
+        if (noisyDistance == None and jailPosition != ghostPosition): return 0.0
+        if (noisyDistance != None and jailPosition == ghostPosition): return 0.0
         
         manDistance = manhattanDistance(pacmanPosition, ghostPosition)
         return busters.getObservationProbability(noisyDistance, manDistance)
