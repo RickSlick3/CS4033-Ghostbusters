@@ -1,3 +1,3 @@
 # CS4033-Ghostbusters
 
-Credits: http://ai.berkeley.edu
+Credits: http://ai.berkeley.edu/tracking.html 
