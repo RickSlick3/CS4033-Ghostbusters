@@ -102,7 +102,37 @@ def joinFactors(factors: List[Factor]):
 
 
     "*** YOUR CODE HERE ***"
-    raiseNotDefined()
+    unconditionedVariables = set()
+    conditionedVariables = set()
+    
+    # calculate the set of unconditioned variables and conditioned variables for the join of those factors
+    for factor in factors:
+        
+        for uncondVariable in factor.unconditionedVariables():
+            unconditionedVariables.add(uncondVariable)
+
+        for condVariable in factor.conditionedVariables():
+            conditionedVariables.add(condVariable)
+    
+    # remove overlaps
+    for uncondVariable in unconditionedVariables:
+        if uncondVariable in conditionedVariables:
+            conditionedVariables.remove(uncondVariable)
+    
+    variableDomainsDict = list(factors)[0].variableDomainsDict()
+    joinFactor = Factor(unconditionedVariables, conditionedVariables, variableDomainsDict)
+
+    assignmentDict = joinFactor.getAllPossibleAssignmentDicts()
+
+    for assignment in assignmentDict:
+        
+        prob = 1
+        for factor in factors:
+            
+            prob = prob * factor.getProbability(assignment)
+            joinFactor.setProbability(assignment, prob)
+    
+    return joinFactor
     "*** END YOUR CODE HERE ***"
 
 ########### ########### ###########
