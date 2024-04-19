@@ -198,9 +198,9 @@ def eliminateWithCallTracking(callTrackingList=None):
             for var in factor.variableDomainsDict()[eliminationVariable]:
                 
                 assignment[eliminationVariable] = var
-                prob = prob + factor.getProbability(assignment)#adding the probablity to get the value of probablity after elimination
+                prob = prob + factor.getProbability(assignment)
             
-            joinFactor.setProbability(assignment, prob)#storing new value of probablity with the newassignment after elimination
+            joinFactor.setProbability(assignment, prob)
         
         return joinFactor
         "*** END YOUR CODE HERE ***"

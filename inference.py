@@ -223,7 +223,6 @@ def inferenceByVariableEliminationWithCallTracking(callTrackingList=None):
         return normalize(joinFactors(allFactors))
         "*** END YOUR CODE HERE ***"
 
-
     return inferenceByVariableElimination
 
 inferenceByVariableElimination = inferenceByVariableEliminationWithCallTracking()
@@ -361,10 +360,14 @@ class DiscreteDistribution(dict):
         {}
         """
         "*** YOUR CODE HERE ***"
-        if self.total() != 0:
-            
-            for key in self.keys(): 
-                self[key] = self[key] / self.total()
+        total = self.total()
+        
+        if total == 0:
+            return
+
+        else: 
+            for key in self.keys():
+                self[key] = self[key] / total
         "*** END YOUR CODE HERE ***"
 
     def sample(self):
@@ -389,13 +392,9 @@ class DiscreteDistribution(dict):
         0.0
         """
         "*** YOUR CODE HERE ***"
-        dist = 0
-        for key in self.keys():
-            dist = dist + self[key]
+        keys = list(self.keys())
         
-        randSample = (random.random() * dist) - 1
-        
-        return self[randSample]
+        return random.choices(keys, weights = list(self.values()))[0]
         "*** END YOUR CODE HERE ***"
 
 
@@ -470,14 +469,10 @@ class InferenceModule:
         Return the probability P(noisyDistance | pacmanPosition, ghostPosition).
         """
         "*** YOUR CODE HERE ***"
-        if noisyDistance == None:
-            if ghostPosition == jailPosition:
-                return 1
-            else: 
-                return 0
-        
-        if ghostPosition == jailPosition:
-            return 0
+        if noisyDistance == None and jailPosition == ghostPosition:
+            return 1.0
+        if (noisyDistance == None and jailPosition != ghostPosition) or (noisyDistance != None and jailPosition == ghostPosition):
+            return 0.0
         
         manDistance = manhattanDistance(pacmanPosition, ghostPosition)
         return busters.getObservationProbability(noisyDistance, manDistance)
@@ -594,7 +589,8 @@ class ExactInference(InferenceModule):
         position is known.
         """
         "*** YOUR CODE HERE ***"
-        raiseNotDefined()
+        for position in self.allPositions:
+            self.beliefs[position] *= self.getObservationProb(observation, gameState.getPacmanPosition(), position, self.getJailPosition())
         "*** END YOUR CODE HERE ***"
         self.beliefs.normalize()
     
@@ -612,7 +608,19 @@ class ExactInference(InferenceModule):
         current position is known.
         """
         "*** YOUR CODE HERE ***"
-        raiseNotDefined()
+        discreteDist = DiscreteDistribution()
+        
+        for oldPos in self.allPositions:
+            
+            positionProb = self.beliefs[oldPos]
+            newPosDist = self.getPositionDistribution(gameState, oldPos)
+            
+            for key in newPosDist.keys():
+                
+                discreteDist[key] = discreteDist[key] + (positionProb * newPosDist[key])
+        
+        self.beliefs = discreteDist
+        self.beliefs.normalize()
         "*** END YOUR CODE HERE ***"
 
     def getBeliefDistribution(self):
@@ -644,7 +652,12 @@ class ParticleFilter(InferenceModule):
         """
         self.particles = []
         "*** YOUR CODE HERE ***"
-        raiseNotDefined()
+        legalPositions = self.legalPositions
+        numLegalPositions = len(legalPositions)
+        
+        for count in range(self.numParticles):
+            
+            self.particles.append(legalPositions[count % numLegalPositions])   
         "*** END YOUR CODE HERE ***"
 
     def getBeliefDistribution(self):
@@ -656,7 +669,13 @@ class ParticleFilter(InferenceModule):
         This function should return a normalized distribution.
         """
         "*** YOUR CODE HERE ***"
-        raiseNotDefined()
+        discreteDist = DiscreteDistribution()
+
+        for particle in self.particles:
+            discreteDist[particle] = discreteDist[particle] + 1
+
+        discreteDist.normalize()
+        return discreteDist
         "*** END YOUR CODE HERE ***"
     
     ########### ########### ###########
@@ -675,8 +694,23 @@ class ParticleFilter(InferenceModule):
         be reinitialized by calling initializeUniformly. The total method of
         the DiscreteDistribution may be useful.
         """
-        "*** YOUR CODE HERE ***"
-        raiseNotDefined()
+        "*** YOUR CODE HERE ***"       
+        discreteDist = DiscreteDistribution()
+        
+        for particle in self.particles:
+            observationProb = self.getObservationProb(observation, gameState.getPacmanPosition(), particle, self.getJailPosition())
+            discreteDist[particle] += observationProb
+        
+        discreteDist.normalize()
+
+        if discreteDist.total() == 0:
+            self.initializeUniformly(gameState)
+        else:
+            temp = []
+            for _ in range(len(self.particles)):
+                temp.append(discreteDist.sample())
+                
+            self.particles = temp
         "*** END YOUR CODE HERE ***"
     
     ########### ########### ###########
@@ -689,5 +723,12 @@ class ParticleFilter(InferenceModule):
         gameState.
         """
         "*** YOUR CODE HERE ***"
-        raiseNotDefined()
+        particles = []
+        
+        for oldPos in self.particles:
+            
+            newPosDist = self.getPositionDistribution(gameState, oldPos)
+            particles.append(newPosDist.sample())
+        
+        self.particles = particles
         "*** END YOUR CODE HERE ***"

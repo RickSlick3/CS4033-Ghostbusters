@@ -146,8 +146,39 @@ class GreedyBustersAgent(BustersAgent):
         legal = [a for a in gameState.getLegalPacmanActions()]
         livingGhosts = gameState.getLivingGhosts()
         livingGhostPositionDistributions = \
-            [beliefs for i, beliefs in enumerate(self.ghostBeliefs)
-             if livingGhosts[i+1]]
-        "*** YOUR CODE HERE ***"
-        raiseNotDefined()
+            [beliefs for i, beliefs in enumerate(self.ghostBeliefs) if livingGhosts[i+1]]
+        
+        "*** YOUR CODE HERE ***"    
+        positionDist = [position.argMax() for position in livingGhostPositionDistributions]
+
+        closestPosition = positionDist[0]
+        mazeDistance = self.distancer.getDistance(positionDist[0], pacmanPosition)
+        
+        chosenAction = None
+        newMazeDistance = None
+        
+        for position in positionDist[1:]:
+            
+            distance = self.distancer.getDistance(position, pacmanPosition)
+            
+            if mazeDistance > distance:
+                closestPosition = position
+                mazeDistance = distance
+
+        for action in legal:
+            
+            successorPosition = Actions.getSuccessor(pacmanPosition, action)
+            
+            if newMazeDistance == None:
+                newMazeDistance = self.distancer.getDistance(successorPosition, closestPosition)
+                chosenAction = action
+            
+            else: 
+                distance = self.distancer.getDistance(successorPosition, closestPosition)
+
+                if newMazeDistance > distance:
+                    chosenAction = action
+                    newMazeDistance = distance
+
+        return chosenAction
         "*** END YOUR CODE HERE ***"
